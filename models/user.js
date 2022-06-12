@@ -1,41 +1,41 @@
-const mongoose = require('mongoose');
-/*
-const UserSchema = mongoose.Schema(
-    {
-        userId: String,
-        password: String,
-        confirmPassword: String,
-    },
-    { timestamps: true }
-);
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const saltRounds = 10; //10자리로 암호화
 
-UserSchema.virtual('authorId').get(function () { return this._id.toHexString(); });
-UserSchema.set('toJSON', { virtuals: true, });
-/*
-const User = mongoose.model('User', UserSchema);
+const UserSchema = new mongoose.Schema({
+  email: String,
+  nickname: String,
+  password: String,
+  confirmPassword: String,
+});
 
-async function getUserByAuthorName(authorName)
-{
-    return User.find({ authorName });
-}
+//비밀번호 암호화
+UserSchema.pre("save", function (next) {
+  const user = this;
 
-async function findById(id) {
-    return User.findById(id);
-}
-async function getUserByIdAndPs(authorName, password)
-{
-    return User.findOne({ authorName, password });
-}
+  // user가 password를 바꿀때만 hashing
+  if (user.isModified("password")) {
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) {
+        return next(err);
+      }
 
-
-async function createUser(user)
-{
-    return new User(user).save();
-}
+      bcrypt.hash(user.password, salt, function (err, hash) {
+        if (err) {
+          return next(err)
+        }
+        user.password = hash
+        next()
+      })
+    })
+  }
+});
 
 
-module.exports.getUserByAuthorName = getUserByAuthorName;
-module.exports.findById = findById;
-module.exports.getUserByIdAndPs = getUserByIdAndPs;
-module.exports.createUser = createUser;
-*/
+UserSchema.virtual("authorId").get(function () {
+  return this._id.toHexString();
+});
+UserSchema.set("toJSON", { virtuals: true });
+
+module.exports = mongoose.model("User", UserSchema);
+

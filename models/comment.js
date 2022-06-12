@@ -1,35 +1,37 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
-const CommentSchema = new Schema(
+
+
+/*const gettime = new Date();
+const utcNow = gettime.getTime() + gettime.getTimezoneOffset() * 60 * 1000;
+const koreaTimeDiff = 9 * 60 * 60 * 1000;
+const krtime = new Date(utcNow + koreaTimeDiff);
+*/
+const CommentSchema = mongoose.Schema(
   {
     nickname: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       required: true,
     },
-    contentId: {
-      type: String,
-    },
-    //commentuser:{type:mongoose.Schema.Types.ObjectId, ref:'user', required:true},
     comment: {
       type: String,
       required: true,
     },
     updateAt: {
-      type: Date,
-      default: Date.now,
+        type : Date,
+        default : Date.now
     },
+
     contentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "board",
+      ref: "contents",
       required: true,
     },
-    //commentId 버츄얼 생성
-  },
-  {
+  }
+  /*{
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  }*/
 );
 
 CommentSchema.virtual('commentId').get(function () {

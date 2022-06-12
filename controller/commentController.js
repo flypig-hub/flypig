@@ -5,57 +5,64 @@ const Content = require("../models/content");
 const router = express.Router();
 const authMiddleware = require("../middlewares/auth-middleware");
 
-router.post("/comments/write", authMiddleware, async (req, res) => {
-  //url 설정
-  function checkcheckContentTitle(req, res, next) {
-    Content.findOne({ _id: req.query.contentId }, function (err, content) {
-      if (err) return res.json(err);
-
-      res.locals.content = content;
-      next();
-    });
-  }
-  checkcheckContentTitle();
-  const { userId } = res.locals.user;
-  const { nickname, comment, updateAt } = req.body;
-  const { contentId } = res.locals.content;
-  //req.body에서 nickname을 가져와야하는데
-  //contentId를 가져올 수 없을까
+async function postcom(req, res) {
+  
+ 
+  const { nickname } = res.locals.user;
+  const { comment } = req.body;
+  const { contentId } = req.params;
   const contentcomment = await Comment.create({
-    contentId,
-    userId,
     comment,
-    updateAt,
     nickname,
+    contentId
   });
   res.json({ comment: contentcomment });
   res.status(201).json({ result: "success", msg: "댓글이 등록되었습니다." });
-});
+};
 
-// *** 댓글 수정 API
-router.patch(
-  "/comments/:commentId/modify",
-  authMiddleware,
-  async (req, res) => {
-    const { commentId, fixedcontent } = req.body;
-    const { userId } = res.locals.user;
-    //버튼 클릭 시 commentId랑 userid를 가지고 올 수 있는가?
-    const comment = await Comment.findById(commentId);
-    const content = await Content.findbyId(contentId);
-    const gettime = new Date();
-    const utcNow = gettime.getTime() + (now.getTimezoneOffset() * 60 * 1000);
-    const koreaTimeDiff = 9 * 60 * 60 * 1000;
-    const now = new Date(utcNow + koreaTimeDiff);
-    async function existedComment(commentId) {
-      comment = await Comment.findById(commentId);
+
+async function getcom (req, res)  {
+  const { contentId } = req.params;
+  const { comment, updateAt } = await Comment.find({
+    contentId: String(contentId),
+  })
+    .sort("-updateAt")
+    .exec();
+
+  
+  res.json({
+    comment,
+  });
+
+  res.json;
+  res.status(201).json();
+};
+
+  async function patchcom (req, res)  {
+    //db에서 commnet.nickname이랑 nickname 일치하는지 확인하고 commnetId찾아서 (중요) 해결. 
+    const { contentId } = req.params;
+    const { fixedcontent } = req.body;
+    //const { nickname } = res.locals.user;
+    const { comment, commentId } = await Comment.findById(contentId);
+
+    function timesetkr() {
+      const gettime = new Date(); 
+      const utcNow =
+        gettime.getTime() + gettime.getTimezoneOffset() * 60 * 1000;
+      const koreaTimeDiff = 9 * 60 * 60 * 1000;
+      const krtime = new Date(utcNow + koreaTimeDiff);
     }
-    existedComment();
-    if (now !== comment.updateAt) {
-      await Comment.findByIdAndUpdate(updateAt, { now });
+    timesetkr();
+    if (krtime !== comment.updateAt) {
+      await Comment.findByIdAndUpdate(updateAt, { krtime });
     }
-    if (userId !== content.userId)
+    //if (nickname !== comment.nickname)
+    //{
+    //  res.status(403).json({
+     //   msg:"댓글 작성자만 댓글을 삭제할 수 있습니다."
+    //  })
+    //};
       if (comment) {
-        //if(userId = user.userId)
         const fixedComment = await Comment.findByIdAndUpdate(commentId, {
           $set: { comment: fixedcontent },
         });
@@ -66,21 +73,27 @@ router.patch(
       } else {
         res.status(400).json({
           result: "error",
-          msg: "댓글 수정에 실패했습니다..",
+          msg: "댓글 수정에 실패했습니다.",
         });
-      }
-  }
-);
+    };
+  };
 
 // *** 댓글 삭제 API
-router.delete(
-  "/comments/:commentId/delete",
-  authMiddleware,
-  async (req, res) => {
-    const { commentId } = req.params;
-    const existsComment = await Comment.findById(commentId);
-    //console.log(commentId);
-    if (existsComment) {
+
+  async function delcom (req, res) {
+    const { contentId } = req.params;
+    const { comment, commentId } = await Comment.findById(contentId);
+    
+    //const { nickname } = res.locals.user;
+    
+    console.log(comment);
+    //if (nickname !== comment.nickname)
+    //{
+    //  res.status(403).json({
+    //   msg:"댓글 작성자만 댓글을 삭제할 수 있습니다."
+    //  })
+    //};
+    if (Comment) {
       await Comment.findByIdAndDelete(commentId); // commentId 일치하는 것으로 삭제
       res.status(200).json({
         result: "success",
@@ -92,5 +105,12 @@ router.delete(
         msg: "코멘트가 정상적으로 삭제되지 않았습니다.",
       });
     }
-  }
-);
+  };
+
+
+module.exports.postcom = postcom;
+//module.exports.commentList = commentList;
+module.exports.patchcom = patchcom;
+//module.exports.getpatchedcom = getpatchedcom;
+module.exports.delcom = delcom;
+module.exports.getcom = getcom;

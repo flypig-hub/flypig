@@ -1,42 +1,30 @@
-const mongoose = require('mongoose');
-const userDB = require("./user");
-/*
-const BoardSchema = mongoose.Schema(
+const mongoose = require("mongoose");
+
+const ContentSchema = mongoose.Schema(
     {
-        title: String,
+        email : String,
+        nickname: String,
+        title : String,
         content: String,
-        articlePassword: String,
-        authorId: String,
-        authorName: String,
+        Like:Number,
+        imageURL : String,
     },
     { timestamps: true }
 );
 
-const Article = mongoose.model('Article', BlogSchema);
+// const Content = mongoose.model('Content', ContentSchema);
 
-BlogSchema.virtual('articleId').get(function () { return this._id.toHexString(); });
-BlogSchema.set('toJSON', { virtuals: true });
+ContentSchema.virtual('contentId').get(function () { 
+    return this._id.toHexString(); 
+});
 
-async function getArticleList() {
-    return Article.find().sort({ createdAt : 'desc' });
+ContentSchema.set('toJSON', { virtuals: true });
+
+async function getContentList() {
+    return Content.find().sort({ createdAt : 'desc' });
 }
 
-async function getArticleById(id) {
-    return Article.findById(id);
-}
+const Content = mongoose.model('Content', ContentSchema);
+module.exports = Content;
 
-async function createArticle(article) {
-    const author = userDB.findById(article.authorId);
-
-    return new Article({
-        title: article.title,
-        content: article.content,
-        articlePassword: article.articlePassword,
-        authorId: article.authorId,
-        authorName: author.authorName
-    }).save();
-}
-
-module.exports.getArticleList = getArticleList;
-module.exports.getArticleById = getArticleById;
-module.exports.createArticle = createArticle;*/
+module.exports.getContentList = getContentList;

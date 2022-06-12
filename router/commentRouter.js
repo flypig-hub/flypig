@@ -1,24 +1,21 @@
 const express = require("express");
-const Comment = require("../models/comment")
 const authMiddleware = require("../middlewares/auth-middleware");
-const router = require("./contentRouter");
+const router = express.Router();
 const commentController = require("../controller/commentController");
-const { json } = require("express");
 
 
-router.get("/content/contentId/", authMiddleware, async (req, res) => {
-  const { contentId } = req.params;
-  const { userId } = res.locals.user;
-  const { comment } = await Comment.find({ commentId: Number(commentId) })
-    //.sort("-order")
-    //.exec();
 
-  res.json({
-    post,
-    comment,
-  });
+//post
+router.post("/:contentId", authMiddleware, commentController.postcom);
 
-  res.json;
-  res.status(201).json();
-});
+// get
+router.get("/:contentId", authMiddleware, commentController.getcom);
+
+// patch
+router.patch("/:contentId", authMiddleware, commentController.patchcom);
+
+
+// delete
+
+router.delete("/:contentId", authMiddleware, commentController.delcom);
 module.exports = router;

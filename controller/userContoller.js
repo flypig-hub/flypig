@@ -1,51 +1,82 @@
 const jwt = require("jsonwebtoken");
 const userDB = require("../models/user");
-/*
-async function signUp (req, res) {
-    console.log(req.body);
-    const { authorName, password, confirmPassword } = req.body;
+const Joi = require("joi");
+const bcrypt = require("bcrypt");
+
+const UserSchema = Joi.object({
+  email: Joi.string()
+    .required()
+    .pattern(new RegExp("^[0-9a-zA-Z]+@+[0-9a-zA-Z]+.+[a-zA-Z]$")),
+
+  nickname: Joi.string()
+    .required()
+    .pattern(new RegExp("^[0-9a-zA-Z@$!%#?&]{3,10}$")),
+
+  password: Joi.string().required().min(3),
+
+  confirmPassword: Joi.string().required().min(3),
+});
+
+//회원가입
+async function signUp(req, res) {
+  try {
+    const { email, nickname, password, confirmPassword } =
+      await UserSchema.validateAsync(req.body);
 
     if (password !== confirmPassword) {
-        // 비밀번호, 비밀번호 확인 일치 여부 확인
-        return res.status(400).send({ errorMessage: '비밀번호와 비밀번호 확인의 내용이 일치하지 않습니다.', });
+      return res
+        .status(400)
+        .send({
+          errorMessage: "비밀번호와 비밀번호 확인의 내용이 일치하지 않습니다.",
+        });
     }
 
-    const existUsers = await userDB.getUserByAuthorName(authorName);
-    if (existUsers.length) {
-        // authorName 중복 데이터가 존재 할 경우
-        return res.status(400).send({errorMessage: '중복된 닉네임입니다.',});
+    const existUsers = await userDB.findOne({ email });
+    if (existUsers) {
+      return res.status(400).send({ errorMessage: "중복된 이메일입니다." });
+    }
+    // false 인경우 email check X
+    const existUsersNickname = await userDB.findOne({ nickname });
+    if (existUsersNickname) {
+      return res.status(400).send({ errorMessage: "중복된 닉네임입니다." });
     }
 
-    await userDB.createUser({authorName, password});
+    res.status(201).send({ message: "회원가입에 성공했습니다." });
 
-    res.status(201).send({ message : "회원가입에 성공했습니다."});
-}
-
-async function login(req, res) {
-    const { authorName, password } = req.body;
-    const user = await userDB.getUserByIdAndPs(authorName, password);
-
-    if (!user) {
-        return res.status(400).send({ errorMessage: "이메일 또는 패스워드가 잘못 되었습니다." });
-    }
-
-    const id = user.authorId;
-    const token = jwt.sign({ id }, "yushin-secret-key");
-    res.status(200).send({ message : "로그인에 성공했습니다." , token });
-}
-
-async function checkMe(req, res) {
-    const { user } = res.locals;
-    res.send({
-        user: {
-            authorId: user.authorId,
-            authorName: user.authorName,
-        },
+    const users = new userDB({ email, nickname, password });
+    await users.save();
+  } catch (err) {
+    res.status(400).send({
+      errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
+  }
 }
 
+//로그인
+async function login(req, res) {
+  const { email, password } = req.body;
+  const user = await userDB.findOne({ email });
+
+  const userCompared = await bcrypt.compare(password, user.password);
+  if (!userCompared) {
+    return res
+      .status(400)
+      .send({ errorMessage: "이메일이나 비밀번호가 올바르지 않습니다." });
+  }
+
+  //비밀번호까지 맞다면 토큰을 생성하기.
+  const token = jwt.sign({ authorId: user.authorId }, "yushin-secret-key");
+  res.status(200).send({ message: "로그인에 성공했습니다.", token });
+}
+
+//사용자 인증
+async function checkMe(req, res) {
+  const { user } = res.locals;
+  res.send({
+    user,
+  });
+}
 
 module.exports.signUp = signUp;
 module.exports.login = login;
 module.exports.checkMe = checkMe;
-*/
